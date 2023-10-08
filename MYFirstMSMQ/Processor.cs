@@ -1,15 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Messaging;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MYFirstMSMQ
 {
-    
-    
+    /// <summary>
+    /// Processer class
+    /// Works as a template for the resequencer
+    /// Following the 'L' in the SOLID principles
+    /// </summary>
     public class Processor
     {
         protected MessageQueue inputQueue;
@@ -18,29 +16,29 @@ namespace MYFirstMSMQ
         {
             this.inputQueue = inputQueue;
             this.outputQueue = outputQueue;
-
-            inputQueue.Formatter = new ActiveXMessageFormatter();
-            inputQueue.MessageReadPropertyFilter.ClearAll();
-            inputQueue.MessageReadPropertyFilter.AppSpecific = true;
-            inputQueue.MessageReadPropertyFilter.Body = true;
+            
             inputQueue.MessageReadPropertyFilter.CorrelationId = true;
-            inputQueue.MessageReadPropertyFilter.Id = true;
+            inputQueue.MessageReadPropertyFilter.Label = true;
+            
             Console.WriteLine("Processing Messages from " + inputQueue.Path + " to " + outputQueue.Path);
 
             inputQueue.ReceiveCompleted += new ReceiveCompletedEventHandler(OnReceiveCompleted);
             inputQueue.BeginReceive();
         }
-        public void Process()
-        {
-            
-        }
+        
+        /// <summary>
+        /// Basic OnMessage/Onreceive method that almost all classes implement
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="asyncResult"></param>
         private void OnReceiveCompleted(Object source, ReceiveCompletedEventArgs asyncResult)
         {
-            MessageQueue mq = (MessageQueue)source;
 
+            MessageQueue mq = (MessageQueue)source;
             Message m = mq.EndReceive(asyncResult.AsyncResult);
-            m.Formatter = new ActiveXMessageFormatter();
             ProcessMessage(m);
+
+            mq.BeginReceive();
         }
 
         protected virtual void ProcessMessage(Message m)
